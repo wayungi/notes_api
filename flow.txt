@@ -1,0 +1,4 @@
+1. generate project files
+2. generate tsconfig and configure project
+3. setup scripts
+4. setup tests
