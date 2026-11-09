@@ -96,8 +96,9 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 \
             -o StrictHostKeyChecking=yes \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "sudo -n /usr/bin/bash /usr/local/sbin/deploy-notes-api ghcr.io/wayungi/notes-api:${{ github.sha }}"
+            "sudo -n /usr/local/sbin/deploy-notes-api ghcr.io/wayungi/notes-api:${{ github.sha }}"
 
+            
 # uses: invokes an existing GitHub Action.
 # runs: executes a shell command.
 # needs: establishes a dependency between jobs, ensuring that the current job will only run after the specified job(s) have completed successfully.
