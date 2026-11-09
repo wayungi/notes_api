@@ -66,6 +66,38 @@ jobs:
       - name: Push Docker image to GHCR
         run: docker push ghcr.io/wayungi/notes-api:${{ github.sha }}
 
+  deploy:
+    name: Deploy Notes API to Ubuntu
+    needs: docker-publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure SSH private key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.NOTES_DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+      - name: Deploy Notes API
+        env:
+          DEPLOY_HOST: ${{ secrets.NOTES_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.NOTES_DEPLOY_USER }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.NOTES_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/id_ed25519 \
+            -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo -n /usr/local/sbin/deploy-notes-api ghcr.io/wayungi/notes-api:${{ github.sha }}"
+
 
 # uses: invokes an existing GitHub Action.
 # runs: executes a shell command.
@@ -101,3 +133,11 @@ jobs:
 
   #   echo "Repository files:"
   #   ls -la
+
+
+
+  ##======
+  #sudo add user notesdeploy
+  #sudo install -d -m 700 -o notesdeploy -g notesdeploy /home/notesdeploy/.ssh
+  #Attmpt login with aa new private ssh key after setting up the server
+  # ssh -i ~/.ssh/<notes_api_deploy | key_file_name> -o IdentitiesOnly=yes <notesdeploy | user_on_server>@178.63.16.194
